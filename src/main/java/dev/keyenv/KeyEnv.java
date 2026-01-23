@@ -792,11 +792,11 @@ public class KeyEnv {
         }
 
         return putAsync(path, toJson(body))
-            .thenApply(response -> {
-                clearCache(projectId, environment);
-                return null;
-            })
-            .exceptionally(ex -> {
+            .<Void>handle((response, ex) -> {
+                if (ex == null) {
+                    clearCache(projectId, environment);
+                    return null;
+                }
                 if (ex.getCause() instanceof KeyEnvException && ((KeyEnvException) ex.getCause()).isNotFound()) {
                     // Create if not found
                     Map<String, String> createBody = new HashMap<>();
