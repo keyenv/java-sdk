@@ -85,8 +85,10 @@ class IntegrationTest {
     void setSecret() {
         String testValue = "test-value-" + System.currentTimeMillis();
 
-        Secret secret = client.setSecret(projectId, environment, testSecretKey, testValue);
+        client.setSecret(projectId, environment, testSecretKey, testValue);
 
+        // Verify secret was created by retrieving it
+        SecretWithValue secret = client.getSecret(projectId, environment, testSecretKey);
         assertNotNull(secret);
         assertEquals(testSecretKey, secret.getKey());
     }
@@ -107,7 +109,7 @@ class IntegrationTest {
     @Order(6)
     @DisplayName("getSecrets() returns all secrets for environment")
     void getSecrets() {
-        List<SecretWithValue> secrets = client.getSecrets(projectId, environment);
+        List<SecretWithValueAndInheritance> secrets = client.getSecrets(projectId, environment);
 
         assertNotNull(secrets);
 
@@ -122,9 +124,7 @@ class IntegrationTest {
     void updateSecret() {
         String updatedValue = "updated-value-" + System.currentTimeMillis();
 
-        Secret secret = client.setSecret(projectId, environment, testSecretKey, updatedValue);
-
-        assertNotNull(secret);
+        client.setSecret(projectId, environment, testSecretKey, updatedValue);
 
         // Verify update
         client.clearCache(projectId, environment);
