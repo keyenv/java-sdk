@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 
 import java.time.Duration;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -84,6 +85,42 @@ class KeyEnvTest {
     }
 
     // ============================================================
+    // Cache Isolation Tests
+    // ============================================================
+
+    @Test
+    @DisplayName("different instances have separate caches")
+    void cacheIsolationBetweenInstances() throws Exception {
+        KeyEnv client1 = KeyEnv.builder()
+            .token("token-1")
+            .cacheTtl(Duration.ofMinutes(5))
+            .build();
+        KeyEnv client2 = KeyEnv.builder()
+            .token("token-2")
+            .cacheTtl(Duration.ofMinutes(5))
+            .build();
+
+        // Use reflection to access private cache field
+        java.lang.reflect.Field cacheField = KeyEnv.class.getDeclaredField("cache");
+        cacheField.setAccessible(true);
+
+        @SuppressWarnings("unchecked")
+        Map<String, ?> cache1 = (Map<String, ?>) cacheField.get(client1);
+        @SuppressWarnings("unchecked")
+        Map<String, ?> cache2 = (Map<String, ?>) cacheField.get(client2);
+
+        // Each instance should have its own cache map
+        assertNotSame(cache1, cache2);
+
+        // Clearing one should not affect the other
+        client1.clearAllCache();
+        assertTrue(cache1.isEmpty());
+        // cache2 should be unaffected (also empty since nothing was cached, but
+        // verifying they are separate objects)
+        assertNotSame(cache1, cache2);
+    }
+
+    // ============================================================
     // Integration Tests (require mock server)
     // ============================================================
 
@@ -100,29 +137,4 @@ class KeyEnvTest {
     // - generateEnvFile() generates correct .env format
     // - Error handling for 401, 403, 404, 429, 5xx responses
     // - Caching behavior (cache hits, cache invalidation)
-
-    // Example test structure with WireMock:
-    /*
-    @Test
-    @DisplayName("listProjects() returns projects from API")
-    void listProjectsReturnsProjects() throws Exception {
-        // Setup mock server
-        stubFor(get(urlEqualTo("/projects"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("{\"projects\": [{\"id\": \"proj-1\", \"name\": \"Project 1\"}]}")));
-
-        KeyEnv client = KeyEnv.builder()
-            .token("test-token")
-            .baseUrl(wireMockServer.baseUrl())
-            .build();
-
-        List<Project> projects = client.listProjects();
-
-        assertEquals(1, projects.size());
-        assertEquals("proj-1", projects.get(0).getId());
-        assertEquals("Project 1", projects.get(0).getName());
-    }
-    */
 }

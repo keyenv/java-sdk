@@ -399,14 +399,20 @@ public class KeyEnv {
             return null;
         }
         CacheEntry entry = cache.get(key);
-        if (entry != null && !entry.isExpired()) {
-            return (T) entry.data;
+        if (entry != null) {
+            if (!entry.isExpired()) {
+                return (T) entry.data;
+            }
+            // Remove expired entry to prevent memory leaks
+            cache.remove(key);
         }
         return null;
     }
 
     private void setCache(String key, Object data) {
         if (!cacheTtl.isZero()) {
+            // Prune expired entries to prevent memory leaks
+            cache.entrySet().removeIf(e -> e.getValue().isExpired());
             cache.put(key, new CacheEntry(data, Instant.now().plus(cacheTtl)));
         }
     }
