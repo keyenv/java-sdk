@@ -3,6 +3,7 @@ package dev.keyenv;
 import dev.keyenv.types.*;
 import org.junit.jupiter.api.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ class IntegrationTest {
     private static String testSecretKey;
     private static String testSecretValue;
     private static boolean secretCreated = false;
+    private static List<String> extraCleanupKeys = new ArrayList<>();
 
     @BeforeAll
     static void checkEnv() {
@@ -81,6 +83,56 @@ class IntegrationTest {
                 System.out.println("Note: Could not delete test secret during cleanup: " + e.getMessage());
             }
         }
+
+        // Clean up extra keys created by bulk/multi-env/special-char tests
+        if (client != null) {
+            for (String key : extraCleanupKeys) {
+                try {
+                    client.deleteSecret(projectSlug, environment, key);
+                    System.out.println("Cleaned up extra key: " + key);
+                } catch (Exception e) {
+                    System.out.println("Note: Could not delete extra key " + key + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // Token Validation Tests
+    // ============================================================
+
+    @Test
+    @Order(0)
+    @DisplayName("validateToken() returns token info without throwing")
+    void validateToken() {
+        CurrentUserResponse response = client.validateToken();
+
+        assertNotNull(response, "Validate token response should not be null");
+    }
+
+    @Test
+    @Order(0)
+    @DisplayName("Invalid token throws unauthorized exception")
+    void invalidToken_throws_unauthorized() {
+        String baseUrl = System.getenv("KEYENV_API_URL");
+        if (baseUrl.endsWith("/api/v1")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 7);
+        }
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+
+        KeyEnv invalidClient = KeyEnv.builder()
+            .token("invalid_token_xxx")
+            .baseUrl(baseUrl)
+            .build();
+
+        KeyEnvException exception = assertThrows(KeyEnvException.class, () ->
+            invalidClient.listProjects(),
+            "Invalid token should throw exception"
+        );
+
+        assertTrue(exception.isUnauthorized(), "Exception should indicate unauthorized");
     }
 
     // ============================================================
@@ -242,6 +294,19 @@ class IntegrationTest {
     }
 
     @Test
+    @Order(16)
+    @DisplayName("getSecretHistory() returns history after create and update")
+    void getSecretHistory() {
+        assumeTrue(secretCreated, "Secret must be created first");
+
+        List<SecretHistory> history = client.getSecretHistory(projectSlug, environment, testSecretKey);
+
+        assertNotNull(history, "History should not be null");
+        assertFalse(history.isEmpty(), "History should have at least one entry");
+        assertTrue(history.get(0).getVersion() >= 1, "History entry should have a version");
+    }
+
+    @Test
     @Order(20)
     @DisplayName("deleteSecret() removes the secret")
     void deleteSecret() {
@@ -296,5 +361,171 @@ class IntegrationTest {
 
         assertTrue(exception.isNotFound() || exception.isForbidden(),
             "Exception should indicate not found or forbidden");
+    }
+
+    // ============================================================
+    // Bulk Import Tests
+    // ============================================================
+
+    private static String bulkKey1;
+    private static String bulkKey2;
+    private static String bulkKey3;
+
+    @Test
+    @Order(40)
+    @DisplayName("bulkImport() creates new secrets")
+    void bulkImport_creates() {
+        String ts = String.valueOf(System.currentTimeMillis());
+        bulkKey1 = "JAVA_BULK_A_" + ts;
+        bulkKey2 = "JAVA_BULK_B_" + ts;
+        bulkKey3 = "JAVA_BULK_C_" + ts;
+
+        extraCleanupKeys.add(bulkKey1);
+        extraCleanupKeys.add(bulkKey2);
+        extraCleanupKeys.add(bulkKey3);
+
+        List<SecretInput> secrets = List.of(
+            new SecretInput(bulkKey1, "bulk-val-1"),
+            new SecretInput(bulkKey2, "bulk-val-2"),
+            new SecretInput(bulkKey3, "bulk-val-3")
+        );
+
+        BulkImportResult result = client.bulkImport(projectSlug, environment, secrets, BulkImportOptions.skipExisting());
+
+        assertNotNull(result, "Bulk import result should not be null");
+        assertEquals(3, result.getCreated(), "Should have created 3 secrets");
+    }
+
+    @Test
+    @Order(41)
+    @DisplayName("bulkImport() skips existing secrets when overwrite is false")
+    void bulkImport_skips() {
+        assumeTrue(bulkKey1 != null, "Bulk keys must be created first");
+
+        List<SecretInput> secrets = List.of(
+            new SecretInput(bulkKey1, "new-val-1")
+        );
+
+        BulkImportResult result = client.bulkImport(projectSlug, environment, secrets, BulkImportOptions.skipExisting());
+
+        assertNotNull(result, "Bulk import result should not be null");
+        assertEquals(1, result.getSkipped(), "Should have skipped 1 secret");
+    }
+
+    @Test
+    @Order(42)
+    @DisplayName("bulkImport() overwrites existing secrets when overwrite is true")
+    void bulkImport_overwrites() {
+        assumeTrue(bulkKey1 != null, "Bulk keys must be created first");
+
+        List<SecretInput> secrets = List.of(
+            new SecretInput(bulkKey1, "overwritten-val")
+        );
+
+        BulkImportResult result = client.bulkImport(projectSlug, environment, secrets, BulkImportOptions.withOverwrite());
+
+        assertNotNull(result, "Bulk import result should not be null");
+        assertEquals(1, result.getUpdated(), "Should have updated 1 secret");
+    }
+
+    // ============================================================
+    // Load Env Test
+    // ============================================================
+
+    @Test
+    @Order(50)
+    @DisplayName("loadEnv() loads secrets into system properties")
+    void loadEnv() {
+        String loadEnvKey = "JAVA_LOADENV_" + System.currentTimeMillis();
+        String loadEnvValue = "loadenv-value-" + System.currentTimeMillis();
+        extraCleanupKeys.add(loadEnvKey);
+
+        client.setSecret(projectSlug, environment, loadEnvKey, loadEnvValue);
+        client.clearCache(projectSlug, environment);
+
+        int count = client.loadEnv(projectSlug, environment);
+
+        assertTrue(count > 0, "loadEnv should return a positive count");
+        assertEquals(loadEnvValue, System.getProperty(loadEnvKey), "System property should contain the secret value");
+    }
+
+    // ============================================================
+    // Multi-Environment Test
+    // ============================================================
+
+    @Test
+    @Order(55)
+    @DisplayName("Same key in different environments returns different values")
+    void multiEnvironments() {
+        String multiKey = "JAVA_MULTI_ENV_" + System.currentTimeMillis();
+        String devValue = "dev-value-" + System.currentTimeMillis();
+        String stagingValue = "staging-value-" + System.currentTimeMillis();
+
+        extraCleanupKeys.add(multiKey);
+
+        // Create in development (default environment)
+        client.setSecret(projectSlug, environment, multiKey, devValue);
+
+        // Create in staging
+        client.setSecret(projectSlug, "staging", multiKey, stagingValue);
+
+        // Verify each environment returns different values
+        client.clearCache(projectSlug, environment);
+        client.clearCache(projectSlug, "staging");
+
+        SecretWithValue devSecret = client.getSecret(projectSlug, environment, multiKey);
+        SecretWithValue stagingSecret = client.getSecret(projectSlug, "staging", multiKey);
+
+        assertEquals(devValue, devSecret.getValue(), "Development value should match");
+        assertEquals(stagingValue, stagingSecret.getValue(), "Staging value should match");
+        assertNotEquals(devSecret.getValue(), stagingSecret.getValue(), "Values should differ across environments");
+
+        // Cleanup staging
+        try {
+            client.deleteSecret(projectSlug, "staging", multiKey);
+        } catch (Exception e) {
+            System.out.println("Note: Could not delete staging key " + multiKey + ": " + e.getMessage());
+        }
+    }
+
+    // ============================================================
+    // Special Characters Test
+    // ============================================================
+
+    @Test
+    @Order(56)
+    @DisplayName("Secrets with special characters round-trip correctly")
+    void specialCharacters() {
+        String ts = String.valueOf(System.currentTimeMillis());
+
+        // a) Connection string with special chars
+        String connKey = "JAVA_CONN_STR_" + ts;
+        String connValue = "postgresql://user:p@ss@localhost:5432/db?sslmode=require";
+        extraCleanupKeys.add(connKey);
+
+        client.setSecret(projectSlug, environment, connKey, connValue);
+        client.clearCache(projectSlug, environment);
+        SecretWithValue connSecret = client.getSecret(projectSlug, environment, connKey);
+        assertEquals(connValue, connSecret.getValue(), "Connection string should round-trip correctly");
+
+        // b) Multiline value
+        String multilineKey = "JAVA_MULTILINE_" + ts;
+        String multilineValue = "line1\nline2\nline3";
+        extraCleanupKeys.add(multilineKey);
+
+        client.setSecret(projectSlug, environment, multilineKey, multilineValue);
+        client.clearCache(projectSlug, environment);
+        SecretWithValue multilineSecret = client.getSecret(projectSlug, environment, multilineKey);
+        assertEquals(multilineValue, multilineSecret.getValue(), "Multiline value should round-trip correctly");
+
+        // c) JSON string value
+        String jsonKey = "JAVA_JSON_" + ts;
+        String jsonValue = "{\"host\":\"localhost\",\"port\":5432,\"ssl\":true}";
+        extraCleanupKeys.add(jsonKey);
+
+        client.setSecret(projectSlug, environment, jsonKey, jsonValue);
+        client.clearCache(projectSlug, environment);
+        SecretWithValue jsonSecret = client.getSecret(projectSlug, environment, jsonKey);
+        assertEquals(jsonValue, jsonSecret.getValue(), "JSON string should round-trip correctly");
     }
 }
