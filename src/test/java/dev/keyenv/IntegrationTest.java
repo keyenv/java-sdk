@@ -183,7 +183,7 @@ class IntegrationTest {
         // Check for expected environments
         List<String> envNames = environments.stream()
             .map(Environment::getName)
-            .toList();
+            .collect(java.util.stream.Collectors.toList());
 
         assertTrue(
             envNames.contains("development") || envNames.contains("staging") || envNames.contains("production"),
