@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/keyenv/java-sdk/compare/v1.1.0...v1.2.0) (2026-02-17)
+
+
+### Features
+
+* switch from Maven Central to JitPack for publishing ([64ffe1e](https://github.com/keyenv/java-sdk/commit/64ffe1e3cdf03d5b34a83e372e56cbd151382fe1))
+
+
+### Bug Fixes
+
+* security and correctness fixes with test coverage ([b690dd3](https://github.com/keyenv/java-sdk/commit/b690dd32dda78281f69c61f8c8860da32c735613))
+* use Collectors.toList() for Java 11 compatibility ([0398017](https://github.com/keyenv/java-sdk/commit/03980174ced0b9dfd0d399b768268e7cba0f805e))
+
 ## 1.0.0 (2026-01-24)
 
 
