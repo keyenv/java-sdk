@@ -2,25 +2,41 @@
 
 Official Java SDK for [KeyEnv](https://keyenv.dev) - Secrets management made simple.
 
-[![Maven Central](https://img.shields.io/maven-central/v/dev.keyenv/keyenv-java.svg)](https://search.maven.org/artifact/dev.keyenv/keyenv-java)
-[![Javadoc](https://javadoc.io/badge2/dev.keyenv/keyenv-java/javadoc.svg)](https://javadoc.io/doc/dev.keyenv/keyenv-java)
+[![JitPack](https://jitpack.io/v/keyenv/java-sdk.svg)](https://jitpack.io/#keyenv/java-sdk)
 
 ## Installation
 
 ### Maven
 
+Add the JitPack repository and dependency to your `pom.xml`:
+
 ```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
 <dependency>
-    <groupId>dev.keyenv</groupId>
-    <artifactId>keyenv-java</artifactId>
-    <version>1.0.0</version>
+    <groupId>com.github.keyenv</groupId>
+    <artifactId>java-sdk</artifactId>
+    <version>v1.1.0</version>
 </dependency>
 ```
 
 ### Gradle
 
+Add the JitPack repository and dependency to your `build.gradle`:
+
 ```groovy
-implementation 'dev.keyenv:keyenv-java:1.0.0'
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'com.github.keyenv:java-sdk:v1.1.0'
+}
 ```
 
 ## Quick Start
