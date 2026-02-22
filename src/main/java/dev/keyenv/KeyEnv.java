@@ -447,7 +447,9 @@ public class KeyEnv {
      */
     public CurrentUserResponse getCurrentUser() throws KeyEnvException {
         String response = get("/users/me");
-        return parseJson(response, CurrentUserResponse.class);
+        JsonNode root = parseJson(response, JsonNode.class);
+        JsonNode data = root.has("data") ? root.get("data") : root;
+        return parseJson(data.toString(), CurrentUserResponse.class);
     }
 
     /**
@@ -455,7 +457,11 @@ public class KeyEnv {
      */
     public CompletableFuture<CurrentUserResponse> getCurrentUserAsync() {
         return getAsync("/users/me")
-            .thenApply(response -> parseJson(response, CurrentUserResponse.class));
+            .thenApply(response -> {
+                JsonNode root = parseJson(response, JsonNode.class);
+                JsonNode data = root.has("data") ? root.get("data") : root;
+                return parseJson(data.toString(), CurrentUserResponse.class);
+            });
     }
 
     /**
@@ -504,7 +510,9 @@ public class KeyEnv {
      */
     public Project getProject(String projectId) throws KeyEnvException {
         String response = get("/projects/" + projectId);
-        return parseJson(response, Project.class);
+        JsonNode root = parseJson(response, JsonNode.class);
+        JsonNode data = root.has("data") ? root.get("data") : root;
+        return parseJson(data.toString(), Project.class);
     }
 
     /**
@@ -512,7 +520,11 @@ public class KeyEnv {
      */
     public CompletableFuture<Project> getProjectAsync(String projectId) {
         return getAsync("/projects/" + projectId)
-            .thenApply(response -> parseJson(response, Project.class));
+            .thenApply(response -> {
+                JsonNode root = parseJson(response, JsonNode.class);
+                JsonNode data = root.has("data") ? root.get("data") : root;
+                return parseJson(data.toString(), Project.class);
+            });
     }
 
     /**
@@ -528,7 +540,9 @@ public class KeyEnv {
         body.put("team_id", teamId);
         body.put("name", name);
         String response = post("/projects", toJson(body));
-        return parseJson(response, Project.class);
+        JsonNode root = parseJson(response, JsonNode.class);
+        JsonNode data = root.has("data") ? root.get("data") : root;
+        return parseJson(data.toString(), Project.class);
     }
 
     /**
@@ -585,7 +599,9 @@ public class KeyEnv {
             body.put("inherits_from", inheritsFrom);
         }
         String response = post("/projects/" + projectId + "/environments", toJson(body));
-        return parseJson(response, Environment.class);
+        JsonNode root = parseJson(response, JsonNode.class);
+        JsonNode data = root.has("data") ? root.get("data") : root;
+        return parseJson(data.toString(), Environment.class);
     }
 
     /**
