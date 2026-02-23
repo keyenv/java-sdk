@@ -725,38 +725,6 @@ public class KeyEnv {
     }
 
     /**
-     * @deprecated Use {@link #exportSecrets(String, String)} instead.
-     */
-    @Deprecated
-    public List<SecretWithValueAndInheritance> getSecrets(String projectId, String environment) throws KeyEnvException {
-        return exportSecrets(projectId, environment);
-    }
-
-    /**
-     * @deprecated Use {@link #exportSecretsAsync(String, String)} instead.
-     */
-    @Deprecated
-    public CompletableFuture<List<SecretWithValueAndInheritance>> getSecretsAsync(String projectId, String environment) {
-        return exportSecretsAsync(projectId, environment);
-    }
-
-    /**
-     * @deprecated Use {@link #exportSecretsAsMap(String, String)} instead.
-     */
-    @Deprecated
-    public Map<String, String> getSecretsAsMap(String projectId, String environment) throws KeyEnvException {
-        return exportSecretsAsMap(projectId, environment);
-    }
-
-    /**
-     * @deprecated Use {@link #exportSecretsAsMapAsync(String, String)} instead.
-     */
-    @Deprecated
-    public CompletableFuture<Map<String, String>> getSecretsAsMapAsync(String projectId, String environment) {
-        return exportSecretsAsMapAsync(projectId, environment);
-    }
-
-    /**
      * Gets a single secret by key.
      *
      * @param projectId the project ID
