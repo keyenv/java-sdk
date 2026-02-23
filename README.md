@@ -95,7 +95,7 @@ String dbUrl = System.getProperty("DATABASE_URL");
 Get secrets as a Map:
 
 ```java
-Map<String, String> secrets = client.getSecretsAsMap("project-id", "production");
+Map<String, String> secrets = client.exportSecretsAsMap("project-id", "production");
 System.out.println(secrets.get("DATABASE_URL"));
 ```
 
@@ -104,7 +104,7 @@ System.out.println(secrets.get("DATABASE_URL"));
 Get secrets with full metadata:
 
 ```java
-List<SecretWithValueAndInheritance> secrets = client.getSecrets("project-id", "production");
+List<SecretWithValueAndInheritance> secrets = client.exportSecrets("project-id", "production");
 for (var secret : secrets) {
     System.out.println(secret.getKey() + "=" + secret.getValue());
     if (secret.isInherited()) {
@@ -197,7 +197,7 @@ for (Environment env : project.getEnvironments()) {
 All methods have async variants using `CompletableFuture`:
 
 ```java
-client.getSecretsAsync("project-id", "production")
+client.exportSecretsAsync("project-id", "production")
     .thenApply(secrets -> {
         System.out.println("Loaded " + secrets.size() + " secrets");
         return secrets;
@@ -241,7 +241,7 @@ KeyEnv client = KeyEnv.builder()
     .build();
 
 // Cached for 5 minutes
-var secrets = client.getSecrets("project-id", "production");
+var secrets = client.exportSecrets("project-id", "production");
 
 // Clear cache manually
 client.clearCache("project-id", "production");
@@ -275,8 +275,8 @@ client.clearAllCache();
 | `createEnvironment(projectId, name, inheritsFrom)` | Create environment |
 | `deleteEnvironment(projectId, env)` | Delete environment |
 | `listSecrets(projectId, env)` | List secret keys (no values) |
-| `getSecrets(projectId, env)` | Export secrets with values |
-| `getSecretsAsMap(projectId, env)` | Export as Map |
+| `exportSecrets(projectId, env)` | Export secrets with values |
+| `exportSecretsAsMap(projectId, env)` | Export as Map |
 | `getSecret(projectId, env, key)` | Get single secret |
 | `setSecret(projectId, env, key, value)` | Create or update secret |
 | `setSecret(projectId, env, key, value, desc)` | Create/update with description |

@@ -227,11 +227,11 @@ class IntegrationTest {
 
     @Test
     @Order(12)
-    @DisplayName("getSecrets() returns all secrets including test secret")
-    void getSecrets() {
+    @DisplayName("exportSecrets() returns all secrets including test secret")
+    void exportSecrets() {
         assumeTrue(secretCreated, "Secret must be created first");
 
-        List<SecretWithValueAndInheritance> secrets = client.getSecrets(projectSlug, environment);
+        List<SecretWithValueAndInheritance> secrets = client.exportSecrets(projectSlug, environment);
 
         assertNotNull(secrets, "Secrets list should not be null");
 
@@ -243,14 +243,14 @@ class IntegrationTest {
 
     @Test
     @Order(13)
-    @DisplayName("getSecretsAsMap() returns secrets as key-value map")
-    void getSecretsAsMap() {
+    @DisplayName("exportSecretsAsMap() returns secrets as key-value map")
+    void exportSecretsAsMap() {
         assumeTrue(secretCreated, "Secret must be created first");
 
         // Clear cache to ensure fresh data
         client.clearCache(projectSlug, environment);
 
-        Map<String, String> secrets = client.getSecretsAsMap(projectSlug, environment);
+        Map<String, String> secrets = client.exportSecretsAsMap(projectSlug, environment);
 
         assertNotNull(secrets, "Secrets map should not be null");
         assertTrue(secrets.containsKey(testSecretKey), "Map should contain our test secret key");

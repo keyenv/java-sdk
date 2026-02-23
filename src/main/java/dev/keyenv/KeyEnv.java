@@ -47,8 +47,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * int count = client.loadEnv("your-project-id", "production");
  * System.out.println("Loaded " + count + " secrets");
  *
- * // Get secrets as a map
- * Map<String, String> secrets = client.getSecretsAsMap("project-id", "production");
+ * // Export secrets as a map
+ * Map<String, String> secrets = client.exportSecretsAsMap("project-id", "production");
  * System.out.println(secrets.get("DATABASE_URL"));
  * }</pre>
  */
@@ -652,7 +652,7 @@ public class KeyEnv {
      * @return list of secrets with values
      * @throws KeyEnvException if the request fails
      */
-    public List<SecretWithValueAndInheritance> getSecrets(String projectId, String environment) throws KeyEnvException {
+    public List<SecretWithValueAndInheritance> exportSecrets(String projectId, String environment) throws KeyEnvException {
         // Check cache first
         String cacheKey = "secrets:" + projectId + ":" + environment + ":export";
         List<SecretWithValueAndInheritance> cached = getCached(cacheKey);
@@ -672,9 +672,9 @@ public class KeyEnv {
     }
 
     /**
-     * Async version of {@link #getSecrets(String, String)}.
+     * Async version of {@link #exportSecrets(String, String)}.
      */
-    public CompletableFuture<List<SecretWithValueAndInheritance>> getSecretsAsync(String projectId, String environment) {
+    public CompletableFuture<List<SecretWithValueAndInheritance>> exportSecretsAsync(String projectId, String environment) {
         // Check cache first
         String cacheKey = "secrets:" + projectId + ":" + environment + ":export";
         List<SecretWithValueAndInheritance> cached = getCached(cacheKey);
@@ -695,15 +695,15 @@ public class KeyEnv {
     }
 
     /**
-     * Gets secrets as a key-value map.
+     * Exports secrets as a key-value map.
      *
      * @param projectId the project ID
      * @param environment the environment name
      * @return map of secret keys to values
      * @throws KeyEnvException if the request fails
      */
-    public Map<String, String> getSecretsAsMap(String projectId, String environment) throws KeyEnvException {
-        List<SecretWithValueAndInheritance> secrets = getSecrets(projectId, environment);
+    public Map<String, String> exportSecretsAsMap(String projectId, String environment) throws KeyEnvException {
+        List<SecretWithValueAndInheritance> secrets = exportSecrets(projectId, environment);
         Map<String, String> result = new HashMap<>();
         for (SecretWithValueAndInheritance secret : secrets) {
             result.put(secret.getKey(), secret.getValue());
@@ -712,16 +712,48 @@ public class KeyEnv {
     }
 
     /**
-     * Async version of {@link #getSecretsAsMap(String, String)}.
+     * Async version of {@link #exportSecretsAsMap(String, String)}.
      */
-    public CompletableFuture<Map<String, String>> getSecretsAsMapAsync(String projectId, String environment) {
-        return getSecretsAsync(projectId, environment).thenApply(secrets -> {
+    public CompletableFuture<Map<String, String>> exportSecretsAsMapAsync(String projectId, String environment) {
+        return exportSecretsAsync(projectId, environment).thenApply(secrets -> {
             Map<String, String> result = new HashMap<>();
             for (SecretWithValueAndInheritance secret : secrets) {
                 result.put(secret.getKey(), secret.getValue());
             }
             return result;
         });
+    }
+
+    /**
+     * @deprecated Use {@link #exportSecrets(String, String)} instead.
+     */
+    @Deprecated
+    public List<SecretWithValueAndInheritance> getSecrets(String projectId, String environment) throws KeyEnvException {
+        return exportSecrets(projectId, environment);
+    }
+
+    /**
+     * @deprecated Use {@link #exportSecretsAsync(String, String)} instead.
+     */
+    @Deprecated
+    public CompletableFuture<List<SecretWithValueAndInheritance>> getSecretsAsync(String projectId, String environment) {
+        return exportSecretsAsync(projectId, environment);
+    }
+
+    /**
+     * @deprecated Use {@link #exportSecretsAsMap(String, String)} instead.
+     */
+    @Deprecated
+    public Map<String, String> getSecretsAsMap(String projectId, String environment) throws KeyEnvException {
+        return exportSecretsAsMap(projectId, environment);
+    }
+
+    /**
+     * @deprecated Use {@link #exportSecretsAsMapAsync(String, String)} instead.
+     */
+    @Deprecated
+    public CompletableFuture<Map<String, String>> getSecretsAsMapAsync(String projectId, String environment) {
+        return exportSecretsAsMapAsync(projectId, environment);
     }
 
     /**
@@ -894,7 +926,7 @@ public class KeyEnv {
      * @throws KeyEnvException if the request fails
      */
     public int loadEnv(String projectId, String environment) throws KeyEnvException {
-        List<SecretWithValueAndInheritance> secrets = getSecrets(projectId, environment);
+        List<SecretWithValueAndInheritance> secrets = exportSecrets(projectId, environment);
         for (SecretWithValueAndInheritance secret : secrets) {
             // Note: System.setProperty is used since Java doesn't allow modifying env vars
             System.setProperty(secret.getKey(), secret.getValue());
@@ -906,7 +938,7 @@ public class KeyEnv {
      * Async version of {@link #loadEnv(String, String)}.
      */
     public CompletableFuture<Integer> loadEnvAsync(String projectId, String environment) {
-        return getSecretsAsync(projectId, environment).thenApply(secrets -> {
+        return exportSecretsAsync(projectId, environment).thenApply(secrets -> {
             for (SecretWithValueAndInheritance secret : secrets) {
                 System.setProperty(secret.getKey(), secret.getValue());
             }
@@ -923,7 +955,7 @@ public class KeyEnv {
      * @throws KeyEnvException if the request fails
      */
     public String generateEnvFile(String projectId, String environment) throws KeyEnvException {
-        List<SecretWithValueAndInheritance> secrets = getSecrets(projectId, environment);
+        List<SecretWithValueAndInheritance> secrets = exportSecrets(projectId, environment);
         StringBuilder builder = new StringBuilder();
 
         for (SecretWithValueAndInheritance secret : secrets) {

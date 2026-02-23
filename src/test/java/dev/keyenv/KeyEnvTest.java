@@ -128,7 +128,7 @@ class KeyEnvTest {
     // These tests should verify:
     // - listProjects() makes correct API call and parses response
     // - getProject() makes correct API call and parses response
-    // - getSecrets() makes correct API call and parses response
+    // - exportSecrets() makes correct API call and parses response
     // - getSecret() makes correct API call and parses response
     // - setSecret() makes correct API calls (PUT then POST if needed)
     // - deleteSecret() makes correct API call
