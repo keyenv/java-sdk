@@ -487,7 +487,7 @@ public class KeyEnv {
     public List<Project> listProjects() throws KeyEnvException {
         String response = get("/projects");
         JsonNode root = parseJson(response, JsonNode.class);
-        return parseJson(root.get("projects").toString(), new TypeReference<List<Project>>() {});
+        return parseJson(root.get("data").toString(), new TypeReference<List<Project>>() {});
     }
 
     /**
@@ -497,7 +497,7 @@ public class KeyEnv {
         return getAsync("/projects")
             .thenApply(response -> {
                 JsonNode root = parseJson(response, JsonNode.class);
-                return parseJson(root.get("projects").toString(), new TypeReference<List<Project>>() {});
+                return parseJson(root.get("data").toString(), new TypeReference<List<Project>>() {});
             });
     }
 
@@ -569,7 +569,7 @@ public class KeyEnv {
     public List<Environment> listEnvironments(String projectId) throws KeyEnvException {
         String response = get("/projects/" + projectId + "/environments");
         JsonNode root = parseJson(response, JsonNode.class);
-        return parseJson(root.get("environments").toString(), new TypeReference<List<Environment>>() {});
+        return parseJson(root.get("data").toString(), new TypeReference<List<Environment>>() {});
     }
 
     /**
@@ -579,7 +579,7 @@ public class KeyEnv {
         return getAsync("/projects/" + projectId + "/environments")
             .thenApply(response -> {
                 JsonNode root = parseJson(response, JsonNode.class);
-                return parseJson(root.get("environments").toString(), new TypeReference<List<Environment>>() {});
+                return parseJson(root.get("data").toString(), new TypeReference<List<Environment>>() {});
             });
     }
 
@@ -630,7 +630,7 @@ public class KeyEnv {
     public List<SecretWithInheritance> listSecrets(String projectId, String environment) throws KeyEnvException {
         String response = get("/projects/" + projectId + "/environments/" + environment + "/secrets");
         JsonNode root = parseJson(response, JsonNode.class);
-        return parseJson(root.get("secrets").toString(), new TypeReference<List<SecretWithInheritance>>() {});
+        return parseJson(root.get("data").toString(), new TypeReference<List<SecretWithInheritance>>() {});
     }
 
     /**
@@ -640,7 +640,7 @@ public class KeyEnv {
         return getAsync("/projects/" + projectId + "/environments/" + environment + "/secrets")
             .thenApply(response -> {
                 JsonNode root = parseJson(response, JsonNode.class);
-                return parseJson(root.get("secrets").toString(), new TypeReference<List<SecretWithInheritance>>() {});
+                return parseJson(root.get("data").toString(), new TypeReference<List<SecretWithInheritance>>() {});
             });
     }
 
@@ -663,7 +663,7 @@ public class KeyEnv {
         String response = get("/projects/" + projectId + "/environments/" + environment + "/secrets/export");
         JsonNode root = parseJson(response, JsonNode.class);
         List<SecretWithValueAndInheritance> secrets = parseJson(
-            root.get("secrets").toString(),
+            root.get("data").toString(),
             new TypeReference<List<SecretWithValueAndInheritance>>() {}
         );
 
@@ -686,7 +686,7 @@ public class KeyEnv {
             .thenApply(response -> {
                 JsonNode root = parseJson(response, JsonNode.class);
                 List<SecretWithValueAndInheritance> secrets = parseJson(
-                    root.get("secrets").toString(),
+                    root.get("data").toString(),
                     new TypeReference<List<SecretWithValueAndInheritance>>() {}
                 );
                 setCache(cacheKey, secrets);
@@ -736,7 +736,7 @@ public class KeyEnv {
     public SecretWithValue getSecret(String projectId, String environment, String key) throws KeyEnvException {
         String response = get("/projects/" + projectId + "/environments/" + environment + "/secrets/" + key);
         JsonNode root = parseJson(response, JsonNode.class);
-        return parseJson(root.get("secret").toString(), SecretWithValue.class);
+        return parseJson(root.get("data").toString(), SecretWithValue.class);
     }
 
     /**
@@ -746,7 +746,7 @@ public class KeyEnv {
         return getAsync("/projects/" + projectId + "/environments/" + environment + "/secrets/" + key)
             .thenApply(response -> {
                 JsonNode root = parseJson(response, JsonNode.class);
-                return parseJson(root.get("secret").toString(), SecretWithValue.class);
+                return parseJson(root.get("data").toString(), SecretWithValue.class);
             });
     }
 
@@ -879,7 +879,9 @@ public class KeyEnv {
 
         String response = post("/projects/" + projectId + "/environments/" + environment + "/secrets/bulk", toJson(body));
         clearCache(projectId, environment);
-        return parseJson(response, BulkImportResult.class);
+        JsonNode root = parseJson(response, JsonNode.class);
+        JsonNode data = root.has("data") ? root.get("data") : root;
+        return parseJson(data.toString(), BulkImportResult.class);
     }
 
     /**
@@ -960,7 +962,7 @@ public class KeyEnv {
     public List<Permission> listPermissions(String projectId, String environment) throws KeyEnvException {
         String response = get("/projects/" + projectId + "/environments/" + environment + "/permissions");
         JsonNode root = parseJson(response, JsonNode.class);
-        return parseJson(root.get("permissions").toString(), new TypeReference<List<Permission>>() {});
+        return parseJson(root.get("data").toString(), new TypeReference<List<Permission>>() {});
     }
 
     /**
@@ -1026,7 +1028,7 @@ public class KeyEnv {
     public List<DefaultPermission> getProjectDefaults(String projectId) throws KeyEnvException {
         String response = get("/projects/" + projectId + "/permissions/defaults");
         JsonNode root = parseJson(response, JsonNode.class);
-        return parseJson(root.get("defaults").toString(), new TypeReference<List<DefaultPermission>>() {});
+        return parseJson(root.get("data").toString(), new TypeReference<List<DefaultPermission>>() {});
     }
 
     /**
@@ -1058,7 +1060,7 @@ public class KeyEnv {
     public List<SecretHistory> getSecretHistory(String projectId, String environment, String key) throws KeyEnvException {
         String response = get("/projects/" + projectId + "/environments/" + environment + "/secrets/" + key + "/history");
         JsonNode root = parseJson(response, JsonNode.class);
-        return parseJson(root.get("history").toString(), new TypeReference<List<SecretHistory>>() {});
+        return parseJson(root.get("data").toString(), new TypeReference<List<SecretHistory>>() {});
     }
 
     /**
@@ -1068,7 +1070,7 @@ public class KeyEnv {
         return getAsync("/projects/" + projectId + "/environments/" + environment + "/secrets/" + key + "/history")
             .thenApply(response -> {
                 JsonNode root = parseJson(response, JsonNode.class);
-                return parseJson(root.get("history").toString(), new TypeReference<List<SecretHistory>>() {});
+                return parseJson(root.get("data").toString(), new TypeReference<List<SecretHistory>>() {});
             });
     }
 }
