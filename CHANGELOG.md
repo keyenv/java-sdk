@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/keyenv/java-sdk/compare/v1.2.0...v1.2.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* standardize API response envelope to use data wrapper ([8f89dc6](https://github.com/keyenv/java-sdk/commit/8f89dc66303fa4c8417e008e58ab01401e90be29))
+* unwrap data envelope for single-resource API responses ([050cece](https://github.com/keyenv/java-sdk/commit/050cecec97b4488ba51dd020b0183bc70c802ca7))
+
 ## [1.2.0](https://github.com/keyenv/java-sdk/compare/v1.1.0...v1.2.0) (2026-02-17)
 
 
